@@ -17,9 +17,10 @@ def get_account_info(name:str, tag:str):
     response.raise_for_status()
     return response.json()["puuid"]
 
-def get_match_history(puuid:str, count:int=20):
-    url = f"{BASE_MATCH}/riot/match/v1/matches/by-puuid/{puuid}/ids"
-    response = requests.get(url, headers=HEADER, params={"count": count, "type": "ranked"})
+def get_match_history(puuid:str, count:int=20, start:int=0):
+    url = f"{BASE_MATCH}/lol/match/v5/matches/by-puuid/{puuid}/ids"
+    params = {"start": start, "count": count}
+    response = requests.get(url, headers=HEADER, params=params)
     response.raise_for_status()
     return response.json()
 

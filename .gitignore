@@ -1,1 +1,5 @@
 dragontail-16.11.1.tgz
+.env
+__pycache__/
+*.py[cod]
+*$py.class
