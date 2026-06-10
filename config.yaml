@@ -1,1 +1,40 @@
+constraints:
+  cs_per_minute:
+    weight: 25
+    thresholds:
+      excellent: 8.0
+      good: 6.5
+      average: 5.0
+      poor: 3.5
 
+  kda:
+    weight: 20
+    thresholds:
+      excellent: 4.0
+      good: 3.0
+      average: 2.0
+      poor: 1.0
+
+  vision_score_per_minute:
+    weight: 20
+    thresholds:
+      excellent: 1.2
+      good: 0.8
+      average: 0.5
+      poor: 0.3
+
+  death_share: #deaths / total deaths
+    weight: 20
+    thresholds:
+      excellent: 0.08
+      good: 0.15
+      average: 0.25
+      poor: 0.40
+
+  damage_share: # your damage / total team damage
+    weight: 15
+    thresholds:
+      excellent: 0.35
+      good: 0.28
+      average: 0.20
+      poor: 0.12
