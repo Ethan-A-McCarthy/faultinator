@@ -45,11 +45,12 @@ def extract_stats(match: dict, puuid: str) -> dict:
     
 LOWER_IS_BETTER = ["death_share"]
 
-def calculate_score(match: dict, puuid: str, constraints: dict) -> float:
+def calculate_score(match: dict, puuid: str, constraints: dict) -> dict:
     stats = extract_stats(match, puuid)
     results = {}
     total_weight = sum(c['weight'] for c in constraints.values()) #should be 100 
     weighted_score = 0
+    weighted_sum = 0
     
     for name, config in constraints.items():
         if name not in stats:
