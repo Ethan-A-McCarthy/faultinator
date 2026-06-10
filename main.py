@@ -13,15 +13,17 @@ def main():
     match_history = get_match_history(puuid, count=20)
     print(match_history)
     
-    #test_match = get_single_match(match_history[0])
-    #test_timeline = get_match_timeline(match_history[0])
-    
-    #pd.json_normalize(test_match)
+    test_match = get_single_match(match_history[0])
+    test_timeline = get_match_timeline(match_history[0])
     #print(test_match)
+    #print(test_timeline)
+
+    test_match_df = pd.json_normalize(test_match["info"]["participants"][0])
+    print(test_match_df['kills'][0])
     
-    
-    
-    
+    test_timeline_df = pd.json_normalize(test_timeline)
+    #print(test_timeline_df)
+
 if  __name__ == "__main__":
     main()
     

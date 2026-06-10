@@ -24,14 +24,14 @@ def get_match_history(puuid:str, count:int=20, start:int=0):
     response.raise_for_status()
     return response.json()
 
-def get_single_match(match_id:str):
-    url = f"{BASE_MATCH}/riot/match/v1/matches/{match_id}"
+def get_single_match(match_id:str) -> dict:
+    url = f"{BASE_MATCH}/lol/match/v5/matches/{match_id}"
     response = requests.get(url, headers=HEADER)
     response.raise_for_status()
     return response.json()
 
-def get_match_timeline(match_id:str):
-    url = f"{BASE_MATCH}/riot/match/v1/matches/{match_id}/timeline"
+def get_match_timeline(match_id:str) -> dict:
+    url = f"{BASE_MATCH}/lol/match/v5/matches/{match_id}/timeline"
     response = requests.get(url, headers=HEADER)
     response.raise_for_status()
     return response.json()
