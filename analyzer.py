@@ -37,8 +37,8 @@ def extract_stats(match: dict, puuid: str) -> dict:
     
     return {
         "kda": (kills + assists) / max(1, deaths),
-        "cs_per_min": cs / duration,
-        "vision_score_per_min": vision_score / duration,
+        "cs_per_minute": cs / duration,
+        "vision_score_per_minute": vision_score / duration,
         "death_share": participant['deaths'] / max(1, total_deaths),
         "damage_share": damage_dealt / max(1, team_damage)
     }
@@ -57,13 +57,17 @@ def calculate_score(match: dict, puuid: str, constraints: dict) -> dict:
             continue
         raw = stats[name]
         score = scoring(raw, config['thresholds'], lower_is_better=(name in LOWER_IS_BETTER))
-        weighted_score += score * (config['weight'] / total_weight)
+        weighted_score = score * (config['weight'] / total_weight)
         weighted_sum += weighted_score
         results[name] = {
             "raw": raw,
             "score": score,
-            "weight": config['weight']
+            "weight": config['weight'],
+            "weighted_score": weighted_score
         }
-        results["total_score"] = weighted_sum
-        return results
+        
+    results["total_score"] = weighted_sum
+    return results
+    
+    
     
