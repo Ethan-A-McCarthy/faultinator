@@ -1,6 +1,15 @@
 #so this is score calculator but i have no idea how I am going to calculate for different roles 
 #In the future I could add constraints per role but for now i will focus on top/mid/bot as they are a little more straightforward
 
+#after looking at it a little bit, i think things like vision score and damage share might be more dynamic 
+#i.e. vision score would be more important for support but they would have low damage (champ dependant)
+#top laners will most likely have higher damage share EXCEPT if they are playing tanks or hard splitting
+#so how do we differentiate between a tank top and a carry top? or a poke support vs engage support? could check what champ they are playing and determine a role based on that + items 
+#could also have constraints for each role and apply them based on a mix of champ and position 
+#not really concerned about efficiency just making something 
+#the other thing is that I could have "projected score" based on all of the variables and then compare that to the actual score 
+#would have to do ml stuff ? maybe look into it
+
 import yaml
 
 def load_yaml(path='config.yaml') -> dict:

@@ -34,6 +34,11 @@ def main():
     results = calculate_score(test_match, puuid, constraints)
     print(results)
     
+    #so the total score is stored with the results so if i want to i can look at which constraints are maybe too heavy or too light 
+    #but accesssing might be a little weird since its nested in the results dict
+    
+    
+    
     
 
 if  __name__ == "__main__":
