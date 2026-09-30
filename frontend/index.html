@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Faultinator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
 </head>
 <body>
 
@@ -16,11 +20,13 @@
         <section class="search-section">
             <div class="search-box">
                 <input id="summoner-input" type="text" placeholder="Summoner#TAG" />
+                
                 <select id="games-select">
                     <option value="1">1</option>
                     <option value="5" selected>5</option>
                     <option value="10">10</option>
                 </select>
+                
                 <button id="search-button" onclick="runAnalysis()">Search</button>
             </div>
             <p class="search-hint">Enter Riot username and tag (e.g., Summoner#1234)</p>
