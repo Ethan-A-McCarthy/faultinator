@@ -17,7 +17,7 @@ function buildMatchCard(match) {
   //breakdown is a stat that claude came up with that im not sure exactly what it wants but it could be implemented as there is a chance that it is useful
   const breakdown = match.breakdown ??  Object.fromEntries(
     Object.entries(match).filter(
-      ([key, val]) => !key.startsWith('_') && val && typeof val === 'object' && 'score' in val && 'score' in val)
+      ([key, val]) => !key.startsWith('_') && val && typeof val === 'object' && 'score' in val && 'raw' in val)
     );
 
     const rows = Object.entries(breakdown).map(([key, val]) => {
@@ -45,18 +45,17 @@ function buildMatchCard(match) {
   `<span class="win-badge ${match.win ? 'win' : 'loss'}">${match.win ? 'WIN' : 'LOSS'}</span>`
     : '';
 
-  const title = match.champion ?? match['metadata']['champion'] ?? 'Unknown Champion';
+  const title = match.champion ?? match.match_id ?? 'Unknown Champion';
   const kda = match.kills !== undefined && match.deaths !== undefined && match.assists !== undefined
     ? `${match.kills}/${match.deaths}/${match.assists}`
     : 'N/A';
   const duration = match.duration_mins !== undefined ? `${match.duration_mins}m` : 'N/A';
-  const overallScore = `<span class="overall-score ${grade.cls}">${overall}</span>`;
 
   return `
     <div class="match-card">
       <div class="card-header" onclick="toggleCard(this)">
         ${badge}
-        <span class="card-champion">${title``}</span>
+        <span class="card-champion">${title}</span>
         <span class="card-kda">
           <span>${kda}</span>
           &nbsp;·&nbsp;${duration}
@@ -118,7 +117,7 @@ async function runAnalysis() {
       return;
     }
 
-    const avg = (data.matches.reduce((s, m) => s + m.overall, 0) / data.matches.length).toFixed(1);
+    const avg = (data.matches.reduce((s, m) => s + (m.overall ?? m._overall ?? 0), 0) / data.matches.length).toFixed(1);
     const g   = getGrade(parseFloat(avg));
 
     out.innerHTML = `
