@@ -12,7 +12,7 @@ def main():
     puuid = get_account_info("blockeater43", "777")
     print(puuid)
     match_history = get_match_history(puuid, count=20)
-    print(match_history)
+    #print(match_history)
     
     test_match = get_single_match(match_history[0])
     test_timeline = get_match_timeline(match_history[0])
@@ -32,7 +32,8 @@ def main():
     #analyzer testing i thinking 
     constraints = load_yaml()
     results = calculate_score(test_match, puuid, constraints)
-    print(results)
+    #print(results)
+    print(test_match)
     
     #so the total score is stored with the results so if i want to i can look at which constraints are maybe too heavy or too light 
     #but accesssing might be a little weird since its nested in the results dict
