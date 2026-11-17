@@ -1,47 +1,104 @@
-#using fastapi for frontend and backend communication
 import os
-from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
+
+import requests
 from dotenv import load_dotenv
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+
+load_dotenv()
 
 from riotAPIs import get_account_info, get_match_history, get_single_match
 from analyzer import calculate_score, load_yaml
-    
-load_dotenv()
 
-app = FastAPI(title="LoL Analyzer API")
- 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET"],
-    allow_headers=["*"],
-)
- 
-@app.get("/api/analyze/{name}/{tag}")
-async def analyze(name: str, tag: str, games: int = 5):
-    print("KEY LOADED:", os.getenv("RIOT_API_KEY"))
+
+app = Flask(__name__)
+
+# Only allow the local development UI by default. Set FRONTEND_ORIGINS on the
+# host to the GitHub Pages origin (for example, https://username.github.io).
+allowed_origins = [
+    origin.strip().rstrip("/")
+    for origin in os.getenv(
+        "FRONTEND_ORIGINS",
+        "http://localhost:8000,http://127.0.0.1:8000,"
+        "http://localhost:8001,http://127.0.0.1:8001",
+    ).split(",")
+    if origin.strip()
+]
+CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
+
+
+@app.get("/api/analyze")
+def analyze():
+    name = request.args.get("name", "").strip()
+    tag = request.args.get("tag", "").strip()
+    games_value = request.args.get("games", "5")
+
+    if not name or not tag:
+        return jsonify(detail="Both Riot ID name and tag are required."), 400
+
+    try:
+        games = int(games_value)
+    except ValueError:
+        return jsonify(detail="Games must be a whole number between 1 and 20."), 400
+    if not 1 <= games <= 20:
+        return jsonify(detail="Games must be between 1 and 20."), 400
+
     if not os.getenv("RIOT_API_KEY"):
-        raise HTTPException(status_code=500, detail="RIOT_API_KEY not set in environment")
-    try:
-        account_info = get_account_info(name, tag)
-        puuid = account_info
-        print(puuid)
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Summoner '{name}#{tag}' not found {str(e)}")
- 
-    try:
-        match_ids   = get_match_history(puuid, games)
-        constraints = load_yaml()
-        results     = []
-        for mid in match_ids:
-            match  = get_single_match(mid)
-            scores = calculate_score(match, puuid, constraints)
-            results.append({"match_id": mid, **scores})
-        return {"summoner": f"{name}#{tag}", "matches": results}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error occurred while analyzing matches: {str(e)}")
+        app.logger.error("RIOT_API_KEY is not set")
+        return jsonify(detail="The Riot API key is not configured on the server."), 500
 
-# Serve the frontend at /
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+    try:
+        puuid = get_account_info(name, tag)
+    except requests.HTTPError as error:
+        if error.response is not None and error.response.status_code == 404:
+            return jsonify(detail=f"Riot ID '{name}#{tag}' was not found."), 404
+        app.logger.exception("Riot account lookup failed")
+        return jsonify(detail="Riot account lookup failed. Please try again later."), 502
+    except requests.RequestException:
+        app.logger.exception("Riot account lookup failed")
+        return jsonify(detail="Riot account lookup failed. Please try again later."), 502
+
+    try:
+        match_ids = get_match_history(puuid, count=games)
+        constraints = load_yaml(os.path.join(os.path.dirname(__file__), "config.yaml"))
+        results = []
+
+        for match_id in match_ids:
+            match = get_single_match(match_id)
+            participant = next(
+                player
+                for player in match["info"]["participants"]
+                if player["puuid"] == puuid
+            )
+            scores = calculate_score(match, puuid, constraints)
+
+            # The frontend uses "overall" and "breakdown"; map these to the
+            # analyzer's total and per-stat values so scores display correctly.
+            results.append(
+                {
+                    "match_id": match_id,
+                    "overall": scores["total_score"],
+                    "breakdown": {
+                        key: value
+                        for key, value in scores.items()
+                        if isinstance(value, dict)
+                    },
+                    "champion": participant.get("championName"),
+                    "kills": participant.get("kills"),
+                    "deaths": participant.get("deaths"),
+                    "assists": participant.get("assists"),
+                    "duration_mins": round(match["info"]["gameDuration"] / 60, 1),
+                    "win": participant.get("win"),
+                }
+            )
+
+        return jsonify(summoner=f"{name}#{tag}", matches=results)
+    except requests.HTTPError:
+        app.logger.exception("Riot match request failed")
+        return jsonify(detail="Riot match data could not be fetched. Please try again later."), 502
+    except requests.RequestException:
+        app.logger.exception("Riot match request failed")
+        return jsonify(detail="Riot match data could not be fetched. Please try again later."), 502
+    except (KeyError, StopIteration, TypeError, ValueError):
+        app.logger.exception("Could not analyze Riot match data")
+        return jsonify(detail="Riot match data could not be analyzed."), 502

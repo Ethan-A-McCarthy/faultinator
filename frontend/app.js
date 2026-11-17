@@ -1,3 +1,5 @@
+const API_BASE_URL = (window.FAULTINATOR_API_BASE_URL || '').replace(/\/+$/, '');
+
 function getGrade(score) {
   if (score >= 90) return { letter: 'S', cls: 's-color' };
   if (score >= 75) return { letter: 'A', cls: 'a-color' };
@@ -99,12 +101,19 @@ async function runAnalysis() {
   }
 
   const [name, tag] = raw.split('#');
+  if (!API_BASE_URL) {
+    out.innerHTML = `<p class="state-msg error">Set the Flask API URL in config.js before using the app.</p>`;
+    out.classList.remove('hidden');
+    return;
+  }
+
   btn.disabled = true;
   out.classList.remove('hidden');
   out.innerHTML = `<p class="state-msg">Fetching ${games} ranked games for ${raw}…</p>`;
 
   try {
-    const res  = await fetch(`/api/analyze/${encodeURIComponent(name)}/${encodeURIComponent(tag)}?games=${games}`);
+    const params = new URLSearchParams({ name, tag, games });
+    const res  = await fetch(`${API_BASE_URL}/api/analyze?${params}`);
     const data = await res.json();
 
     if (!res.ok) {
@@ -129,7 +138,10 @@ async function runAnalysis() {
 
   } catch (err) {
     console.error("runAnalysis failed:", err);
-    out.innerHTML = `<p class="state-msg error">${err.name}: ${err.message}</p>`;
+    const message = err instanceof TypeError
+      ? 'Could not reach the Flask API. Check that it is running, config.js has the correct URL, and FRONTEND_ORIGINS allows this frontend address.'
+      : 'The Flask API returned a response the page could not read. Check the API logs.';
+    out.innerHTML = `<p class="state-msg error">${message}</p>`;
   } finally {
     btn.disabled = false;
   }
