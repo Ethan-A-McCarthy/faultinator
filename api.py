@@ -38,7 +38,25 @@ async def analyze(name: str, tag: str, games: int = 5):
         for mid in match_ids:
             match  = get_single_match(mid)
             scores = calculate_score(match, puuid, constraints)
-            results.append({"match_id": mid, **scores})
+            stats = scores["stats"]
+            breakdown = {
+                key: value for key, value in scores.items()
+                if isinstance(value, dict) and "score" in value
+            }
+            results.append({
+                "match_id": mid,
+                "champion": stats["champion"],
+                "win": stats["win"],
+                "kills": stats["kills"],
+                "deaths": stats["deaths"],
+                "assists": stats["assists"],
+                "duration_mins": stats["duration_minutes"],
+                "role": stats["role"],
+                "overall": scores["total_score"],
+                "total_score": scores["total_score"],
+                "stats": stats,
+                "breakdown": breakdown,
+            })
         return {"summoner": f"{name}#{tag}", "matches": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error occurred while analyzing matches: {str(e)}")

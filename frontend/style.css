@@ -234,6 +234,7 @@ main { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem; }
   min-width: 2rem;
   text-align: right;
 }
+.unscored { color: var(--text-dim); }
 
 .s-color  { color: var(--green); }
 .a-color  { color: #6ed49a; }

@@ -49,6 +49,8 @@ def extract_stats(match: dict, puuid: str) -> dict:
     return {
         "win": win,
         "role": position,
+        "champion": participant['championName'],
+        "duration_minutes": duration,
         "kills": kills,
         "deaths": deaths,
         "assists": assists,
@@ -87,6 +89,7 @@ def calculate_score(match: dict, puuid: str, constraints: dict) -> dict:
         }
         
     results["total_score"] = weighted_sum
+    results["stats"] = stats
     return results
     
     

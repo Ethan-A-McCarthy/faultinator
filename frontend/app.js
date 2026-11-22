@@ -7,35 +7,41 @@ function getGrade(score) {
 }
 
 function formatStatName(key) {
-  return key.replace(/_/g, ' ');
+  return key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+}
+
+function formatNumber(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return value ?? 'N/A';
+  return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
 
 function buildMatchCard(match) {
-  const overall = match.overall ?? match._overall ?? 0;
+  const overall = match.overall ?? match.total_score ?? 0;
   const grade = getGrade(overall);
+  const breakdown = match.breakdown ?? {};
+  const stats = match.stats ?? {};
+  const displayStats = Object.entries(stats).filter(
+    ([key]) => !['win', 'role', 'champion', 'duration_minutes'].includes(key)
+  );
 
-  //breakdown is a stat that claude came up with that im not sure exactly what it wants but it could be implemented as there is a chance that it is useful
-  const breakdown = match.breakdown ??  Object.fromEntries(
-    Object.entries(match).filter(
-      ([key, val]) => !key.startsWith('_') && val && typeof val === 'object' && 'score' in val && 'raw' in val)
-    );
-
-    const rows = Object.entries(breakdown).map(([key, val]) => {
-    const g = getGrade(val.score);
-
+  const rows = displayStats.map(([key, raw]) => {
+    const result = breakdown[key];
+    const statGrade = result ? getGrade(result.score) : null;
     return `
       <tr>
         <td class="stat-name">${formatStatName(key)}</td>
-        <td>${val.raw}</td>
+        <td>${formatNumber(raw)}</td>
         <td>
-          <div class="score-bar-wrap">
-            <div class="score-bar">
-              <div class="score-bar-fill ${g.cls}" style="width:${val.score}%; background:currentColor;"></div>
+          ${result ? `
+            <div class="score-bar-wrap">
+              <div class="score-bar">
+                <div class="score-bar-fill ${statGrade.cls}" style="width:${result.score}%; background:currentColor;"></div>
+              </div>
+              <span class="score-val ${statGrade.cls}">${formatNumber(result.score)}</span>
             </div>
-            <span class="score-val ${g.cls}">${val.score}</span>
-          </div>
+          ` : '<span class="unscored">Not scored</span>'}
         </td>
-        <td style="color:var(--text-dim)">${val.weight}%</td>
+        <td style="color:var(--text-dim)">${result ? `${formatNumber(result.weight)}%` : '—'}</td>
       </tr>`;
   }).join('');
 
@@ -49,7 +55,7 @@ function buildMatchCard(match) {
   const kda = match.kills !== undefined && match.deaths !== undefined && match.assists !== undefined
     ? `${match.kills}/${match.deaths}/${match.assists}`
     : 'N/A';
-  const duration = match.duration_mins !== undefined ? `${match.duration_mins}m` : 'N/A';
+  const duration = match.duration_mins !== undefined ? `${formatNumber(match.duration_mins)}m` : 'N/A';
 
   return `
     <div class="match-card">
@@ -58,9 +64,9 @@ function buildMatchCard(match) {
         <span class="card-champion">${title}</span>
         <span class="card-kda">
           <span>${kda}</span>
-          &nbsp;·&nbsp;${duration}
+          &nbsp;·&nbsp;${duration}${match.role ? ` · ${formatStatName(match.role)}` : ''}
         </span>
-        <span class="overall-score ${grade.cls}">${overall}</span>
+        <span class="overall-score ${grade.cls}">${formatNumber(overall)}</span>
         <span class="card-chevron">▼</span>
       </div>
       <div class="card-body">
@@ -117,7 +123,7 @@ async function runAnalysis() {
       return;
     }
 
-    const avg = (data.matches.reduce((s, m) => s + (m.overall ?? m._overall ?? 0), 0) / data.matches.length).toFixed(1);
+    const avg = (data.matches.reduce((s, m) => s + (m.overall ?? m.total_score ?? 0), 0) / data.matches.length).toFixed(2);
     const g   = getGrade(parseFloat(avg));
 
     out.innerHTML = `
