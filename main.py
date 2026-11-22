@@ -31,8 +31,11 @@ def main():
     
     #analyzer testing i thinking 
     constraints = load_yaml()
-    results = calculate_score(test_match, puuid, constraints)
-    print(results)
+    #results = calculate_score(test_match, puuid, constraints)
+    #print(results)
+    
+    stats = extract_stats(test_match, puuid)
+    print(stats["role"])
     
     #so the total score is stored with the results so if i want to i can look at which constraints are maybe too heavy or too light 
     #but accesssing might be a little weird since its nested in the results dict

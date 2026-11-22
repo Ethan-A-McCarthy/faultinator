@@ -3,3 +3,4 @@ dragontail-16.11.1.tgz
 __pycache__/
 *.py[cod]
 *$py.class
+.vscode

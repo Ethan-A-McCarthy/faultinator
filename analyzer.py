@@ -34,19 +34,30 @@ def extract_stats(match: dict, puuid: str) -> dict:
     participant = next(p for p in match['info']['participants'] if p['puuid'] == puuid)
     duration = match['info']['gameDuration'] / 60
     
+    win = participant['win']
+    position = participant['teamPosition']
     kills = participant['kills']
     deaths = participant['deaths']
     assists = participant['assists']
     cs = participant['totalMinionsKilled'] + participant['neutralMinionsKilled']
-    #gold = participant['goldEarned'] will add later 
+    gold = participant['goldEarned']
     vision_score = participant['visionScore']
     damage_dealt = participant['totalDamageDealtToChampions']
     team_damage = sum(p['totalDamageDealtToChampions'] for p in match['info']['participants'] if p['teamId'] == participant['teamId'])
     total_deaths = sum(p['deaths'] for p in match['info']['participants'] if p['teamId'] == participant['teamId'])
     
     return {
+        "win": win,
+        "role": position,
+        "kills": kills,
+        "deaths": deaths,
+        "assists": assists,
         "kda": (kills + assists) / max(1, deaths),
+        "total_cs": cs,
         "cs_per_minute": cs / duration,
+        "total_gold": gold,
+        "gold_per_minute": gold / duration,
+        "total_vision": vision_score,
         "vision_score_per_minute": vision_score / duration,
         "death_share": participant['deaths'] / max(1, total_deaths),
         "damage_share": damage_dealt / max(1, team_damage)
