@@ -21,13 +21,11 @@ app.add_middleware(
  
 @app.get("/api/analyze/{name}/{tag}")
 async def analyze(name: str, tag: str, games: int = 5):
-    print("KEY LOADED:", os.getenv("RIOT_API_KEY"))
     if not os.getenv("RIOT_API_KEY"):
         raise HTTPException(status_code=500, detail="RIOT_API_KEY not set in environment")
     try:
         account_info = get_account_info(name, tag)
         puuid = account_info
-        print(puuid)
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Summoner '{name}#{tag}' not found {str(e)}")
  
